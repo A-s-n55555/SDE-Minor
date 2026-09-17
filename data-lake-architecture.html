@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Lake Architecture</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+            max-width: 1200px;
+            width: 100%;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .toggle-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+        
+        button.active {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .architecture {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .architecture.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .system-box {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .system-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .specs {
+            background: white;
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 15px;
+            font-size: 13px;
+            color: #555;
+        }
+        
+        .components {
+            display: grid;
+            gap: 10px;
+        }
+        
+        .component {
+            background: white;
+            border-left: 4px solid #667eea;
+            padding: 12px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .component:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .component-name {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .component-details {
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+        
+        .vm-grid, .container-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .vm-box, .container-box {
+            background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+            border-radius: 10px;
+            padding: 15px;
+            color: white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .container-box {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+        
+        .vm-box:hover, .container-box:hover {
+            transform: scale(1.05);
+        }
+        
+        .data-flow {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .flow-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .flow-box {
+            flex: 1;
+            min-width: 150px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .flow-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .flow-arrow {
+            position: absolute;
+            right: -30px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-left: 20px solid #764ba2;
+            border-top: 10px solid transparent;
+            border-bottom: 10px solid transparent;
+        }
+        
+        .flow-box:last-child .flow-arrow {
+            display: none;
+        }
+        
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .metric-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .metric-label {
+            font-size: 12px;
+            color: #7f8c8d;
+            text-transform: uppercase;
+        }
+        
+        .network-line {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #667eea, transparent);
+            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .network-line::after {
+            content: '';
+            position: absolute;
+            width: 100px;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, white, transparent);
+            animation: slide 2s infinite;
+        }
+        
+        @keyframes slide {
+            0% { left: -100px; }
+            100% { left: calc(100% + 100px); }
+        }
+        
+        .icon {
+            width: 20px;
+            height: 20px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Virtualized Data Lake Architecture</h1>
+        <p class="subtitle">Hadoop + Spark on Resource-Constrained Hardware</p>
+        
+        <div class="toggle-buttons">
+            <button class="active" onclick="showArchitecture('single')">Single System (8GB RAM)</button>
+            <button onclick="showArchitecture('dual')">Dual System (16GB Total)</button>
+        </div>
+        
+        <!-- Single System Architecture -->
+        <div id="single" class="architecture active">
+            <div class="system-box">
+                <div class="system-title">
+                    <span class="icon">💻</span>
+                    Single System Configuration
+                </div>
+                <div class="specs">
+                    <strong>Specifications:</strong> Intel i5 11th Gen | 8GB RAM | 515GB Storage | Ubuntu 22.04
+                </div>
+                
+                <div class="vm-grid">
+                    <div class="vm-box">
+                        <div class="component-name">Hadoop Master VM</div>
+                        <div class="component-details">
+                            • NameNode<br>
+                            • ResourceManager<br>
+                            • RAM: 1.5GB<br>
+                            • Storage: 50GB
+                        </div>
+                    </div>
+                    <div class="vm-box">
+                        <div class="component-name">Hadoop Worker VM</div>
+                        <div class="component-details">
+                            • DataNode<br>
+                            • NodeManager<br>
+                            • RAM: 1.5GB<br>
+                            • Storage: 100GB
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="container-grid">
+                    <div class="container-box">
+                        <div class="component-name">Spark Master</div>
+                        <div class="component-details">
+                            • Coordinator<br>
+                            • RAM: 512MB<br>
+                            • Port: 7077
+                        </div>
+                    </div>
+                    <div class="container-box">
+                        <div class="component-name">Spark Worker</div>
+                        <div class="component-details">
+                            • Executor<br>
+                            • RAM: 1GB<br>
+                            • Cores: 2
+                        </div>
+                    </div>
+                    <div class="container-box">
+                        <div class="component-name">Query Service</div>
+                        <div class="component-details">
+                            • Apache Superset<br>
+                            • RAM: 512MB<br>
+                            • Port: 8088
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="metrics">
+                    <div class="metric-card">
+                        <div class="metric-value">6.5GB</div>
+                        <div class="metric-label">Total RAM Used</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">250GB</div>
+                        <div class="metric-label">Storage Allocated</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">2-3</div>
+                        <div class="metric-label">Concurrent Jobs</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">1x</div>
+                        <div class="metric-label">Processing Speed</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Dual System Architecture -->
+        <div id="dual" class="architecture">
+            <div class="system-box">
+                <div class="system-title">
+                    <span class="icon">🖥️</span>
+                    System 1 - Master Node
+                </div>
+                <div class="specs">
+                    <strong>Specifications:</strong> Intel i5 11th Gen | 8GB RAM | 515GB Storage
+                </div>
+                
+                <div class="components">
+                    <div class="component">
+                        <div class="component-name">Hadoop NameNode</div>
+                        <div class="component-details">Metadata management | RAM: 1.5GB | Storage: 50GB</div>
+                    </div>
+                    <div class="component">
+                        <div class="component-name">ResourceManager</div>
+                        <div class="component-details">Job scheduling | RAM: 1GB | High availability</div>
+                    </div>
+                    <div class="component">
+                        <div class="component-name">Spark Master</div>
+                        <div class="component-details">Cluster coordinator | RAM: 512MB | WebUI: 8080</div>
+                    </div>
+                    <div class="component">
+                        <div class="component-name">Query & Monitoring</div>
+                        <div class="component-details">Superset + Grafana | RAM: 1GB | Dashboards</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="network-line"></div>
+            
+            <div class="system-box">
+                <div class="system-title">
+                    <span class="icon">🖥️</span>
+                    System 2 - Worker Node
+                </div>
+                <div class="specs">
+                    <strong>Specifications:</strong> Intel i5 11th Gen | 8GB RAM | 515GB Storage
+                </div>
+                
+                <div class="components">
+                    <div class="component">
+                        <div class="component-name">Hadoop DataNode</div>
+                        <div class="component-details">Data storage | RAM: 1.5GB | Storage: 300GB</div>
+                    </div>
+                    <div class="component">
+                        <div class="component-name">NodeManager</div>
+                        <div class="component-details">Container management | RAM: 1GB | YARN integration</div>
+                    </div>
+                    <div class="component">
+                        <div class="component-name">Spark Workers (2x)</div>
+                        <div class="component-details">Parallel processing | RAM: 3GB total | 4 cores</div>
+                    </div>
+                    <div class="component">
+                        <div class="component-name">Cache Service</div>
+                        <div class="component-details">Redis/Memcached | RAM: 1GB | Fast lookups</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="metrics">
+                <div class="metric-card">
+                    <div class="metric-value">13GB</div>
+                    <div class="metric-label">Total RAM Available</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">1TB</div>
+                    <div class="metric-label">Total Storage</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">4-6</div>
+                    <div class="metric-label">Concurrent Jobs</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">2.5x</div>
+                    <div class="metric-label">Processing Speed</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Data Flow -->
+        <div class="data-flow">
+            <h3 style="margin-bottom: 20px; color: #2c3e50;">Data Processing Pipeline</h3>
+            <div class="flow-container">
+                <div class="flow-box">
+                    Data Sources
+                    <div class="flow-arrow"></div>
+                </div>
+                <div class="flow-box">
+                    Ingestion Layer
+                    <div class="flow-arrow"></div>
+                </div>
+                <div class="flow-box">
+                    HDFS Storage
+                    <div class="flow-arrow"></div>
+                </div>
+                <div class="flow-box">
+                    Spark Processing
+                    <div class="flow-arrow"></div>
+                </div>
+                <div class="flow-box">
+                    Query Results
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function showArchitecture(type) {
+            // Remove active class from all architectures and buttons
+            document.querySelectorAll('.architecture').forEach(arch => {
+                arch.classList.remove('active');
+            });
+            document.querySelectorAll('button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Add active class to selected architecture and button
+            document.getElementById(type).classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        // Animate metric values on load
+        window.addEventListener('load', () => {
+            const metrics = document.querySelectorAll('.metric-value');
+            metrics.forEach(metric => {
+                const originalValue = metric.textContent;
+                metric.style.opacity = '0';
+                setTimeout(() => {
+                    metric.style.transition = 'opacity 0.5s ease';
+                    metric.style.opacity = '1';
+                }, 100);
+            });
+        });
+    </script>
+</body>
+</html>
